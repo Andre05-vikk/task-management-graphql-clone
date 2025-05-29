@@ -43,19 +43,14 @@ async function runExamples() {
           id
           username
           email
-          firstName
-          lastName
           createdAt
         }
       }
     `;
     const createUserVars = {
       input: {
-        username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
-        firstName: 'Test',
-        lastName: 'User'
+        password: 'password123'
       }
     };
     
@@ -95,8 +90,6 @@ async function runExamples() {
           id
           username
           email
-          firstName
-          lastName
         }
       }
     `;
@@ -122,7 +115,7 @@ async function runExamples() {
       input: {
         title: 'Complete GraphQL Implementation',
         description: 'Implement a GraphQL API that mirrors the REST API functionality',
-        status: 'IN_PROGRESS',
+        status: 'in_progress',
         priority: 'HIGH'
       }
     };
@@ -165,7 +158,7 @@ async function runExamples() {
     const updateTaskVars = {
       id: taskId,
       input: {
-        status: 'DONE'
+        status: 'completed'
       }
     };
     

@@ -10,6 +10,12 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest",
+    "test:equivalence": "jest tests/api-equivalence.test.js",
+    "test:basic": "jest tests/basic-equivalence.test.js",
+    "test:graphql": "jest tests/api.test.js",
+    "test:apis": "./scripts/test-apis.sh",
+    "test:full": "./scripts/run-full-tests.sh",
+    "test:auto": "./scripts/test-all-auto.sh",
     "validate-schema": "./scripts/validate-schema.sh"
   },
   "repository": {
@@ -32,6 +38,7 @@
     "mongoose": "^8.14.3"
   },
   "devDependencies": {
+    "axios": "^1.7.7",
     "graphql-cli": "^4.1.0",
     "jest": "^29.7.0",
     "nodemon": "^3.1.10",

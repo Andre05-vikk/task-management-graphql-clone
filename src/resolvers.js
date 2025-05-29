@@ -59,20 +59,20 @@ const resolvers = {
       return await User.findById(id);
     },
     
-    // Get all tasks
+    // Get all tasks (user-specific, like REST API)
     tasks: async (_, __, context) => {
       // Authenticate user
-      checkAuth(context);
-      // Return all tasks
-      return await Task.find({});
+      const user = checkAuth(context);
+      // Return tasks for the authenticated user only
+      return await Task.find({ userId: user.id });
     },
     
-    // Get a single task by ID
+    // Get a single task by ID (user-specific)
     task: async (_, { id }, context) => {
       // Authenticate user
-      checkAuth(context);
-      // Return the task with the specified ID
-      return await Task.findById(id);
+      const user = checkAuth(context);
+      // Return the task only if it belongs to the authenticated user
+      return await Task.findOne({ _id: id, userId: user.id });
     },
     
     // Get the currently authenticated user
@@ -86,19 +86,34 @@ const resolvers = {
   Mutation: {
     // Create a new user
     createUser: async (_, { input }) => {
-      // Check if a user with the same username or email already exists
-      const existingUser = await User.findOne({
-        $or: [{ username: input.username }, { email: input.email }]
-      });
-      
-      if (existingUser) {
-        throw new UserInputError('Username or email already in use');
+      const { email, password } = input;
+
+      // Validate input
+      if (!email || !password) {
+        throw new UserInputError('Email and password are required');
       }
-      
-      // Create and save the new user
-      const user = new User(input);
+
+      if (password.length < 6) {
+        throw new UserInputError('Password must be at least 6 characters long');
+      }
+
+      // Check if a user with the same email already exists
+      const existingUser = await User.findOne({
+        $or: [{ username: email }, { email: email }]
+      });
+
+      if (existingUser) {
+        throw new UserInputError('Email already exists');
+      }
+
+      // Create and save the new user (username = email to match REST API)
+      const user = new User({
+        username: email,
+        email: email,
+        password: password
+      });
       await user.save();
-      
+
       return user;
     },
     
@@ -106,24 +121,30 @@ const resolvers = {
     updateUser: async (_, { id, input }, context) => {
       // Authenticate user
       const authUser = checkAuth(context);
-      
+
       // Check if the authenticated user is trying to update their own account
-      // or if they're an admin (you could add an isAdmin field to the User model)
       if (id !== authUser.id.toString()) {
-        throw new AuthenticationError('Not authorized to update this user');
+        throw new AuthenticationError('You can only update your own account');
       }
-      
-      // Update the user
+
+      const { password } = input;
+
+      // Validate password
+      if (!password || password.length < 6) {
+        throw new UserInputError('Password must be at least 6 characters long');
+      }
+
+      // Update the user with new password
       const updatedUser = await User.findByIdAndUpdate(
         id,
-        { $set: input },
+        { $set: { password: password } },
         { new: true, runValidators: true }
       );
-      
+
       if (!updatedUser) {
         throw new UserInputError('User not found');
       }
-      
+
       return updatedUser;
     },
     
@@ -131,17 +152,16 @@ const resolvers = {
     deleteUser: async (_, { id }, context) => {
       // Authenticate user
       const authUser = checkAuth(context);
-      
+
       // Check if the authenticated user is trying to delete their own account
-      // or if they're an admin
       if (id !== authUser.id.toString()) {
-        throw new AuthenticationError('Not authorized to delete this user');
+        throw new AuthenticationError('You can only delete your own account');
       }
-      
+
       // Delete the user and their tasks
       await Task.deleteMany({ userId: id });
       const result = await User.findByIdAndDelete(id);
-      
+
       return !!result; // Return true if user was deleted, false otherwise
     },
     
@@ -174,7 +194,7 @@ const resolvers = {
       
       // Check if the authenticated user owns this task
       if (task.userId.toString() !== user.id.toString()) {
-        throw new AuthenticationError('Not authorized to update this task');
+        throw new UserInputError('Task not found or you do not have permission');
       }
       
       // Update the task
@@ -201,7 +221,7 @@ const resolvers = {
       
       // Check if the authenticated user owns this task
       if (task.userId.toString() !== user.id.toString()) {
-        throw new AuthenticationError('Not authorized to delete this task');
+        throw new UserInputError('Task not found or you do not have permission');
       }
       
       // Delete the task
@@ -228,11 +248,11 @@ const resolvers = {
         throw new UserInputError('Invalid email or password');
       }
       
-      // Generate JWT token
+      // Generate JWT token (match REST API format)
       const token = jwt.sign(
-        { userId: user.id },
+        { id: user.id, email: user.username },
         process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '1h' }
+        { expiresIn: '7d' }
       );
       
       return {

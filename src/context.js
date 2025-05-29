@@ -18,10 +18,10 @@ const createContext = async ({ req }) => {
       token.replace('Bearer ', ''),
       process.env.JWT_SECRET || 'your-secret-key'
     );
-    
-    // Find the user
-    const user = await User.findById(decoded.userId);
-    
+
+    // Find the user (decoded.id instead of decoded.userId to match REST API)
+    const user = await User.findById(decoded.id);
+
     // Return the user in the context
     return { user };
   } catch (err) {

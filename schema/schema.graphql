@@ -47,9 +47,9 @@ type AuthPayload {
 Available task statuses
 """
 enum TaskStatus {
-  TO_DO
-  IN_PROGRESS
-  DONE
+  pending
+  in_progress
+  completed
 }
 
 """
@@ -65,22 +65,15 @@ enum TaskPriority {
 Input type for creating a new user
 """
 input CreateUserInput {
-  username: String!
   email: String!
   password: String!
-  firstName: String
-  lastName: String
 }
 
 """
 Input type for updating a user
 """
 input UpdateUserInput {
-  username: String
-  email: String
-  firstName: String
-  lastName: String
-  password: String
+  password: String!
 }
 
 """
@@ -89,7 +82,7 @@ Input type for creating a new task
 input CreateTaskInput {
   title: String!
   description: String
-  status: TaskStatus = TO_DO
+  status: TaskStatus = pending
   priority: TaskPriority
   dueDate: DateTime
 }
