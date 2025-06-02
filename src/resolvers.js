@@ -65,20 +65,6 @@ const resolvers = {
       const user = checkAuth(context);
       // Return tasks for the authenticated user only
       return await Task.find({ userId: user.id });
-    },
-    
-    // Get a single task by ID (user-specific)
-    task: async (_, { id }, context) => {
-      // Authenticate user
-      const user = checkAuth(context);
-      // Return the task only if it belongs to the authenticated user
-      return await Task.findOne({ _id: id, userId: user.id });
-    },
-    
-    // Get the currently authenticated user
-    me: async (_, __, context) => {
-      // Authenticate user
-      return checkAuth(context);
     }
   },
 

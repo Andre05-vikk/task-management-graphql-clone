@@ -188,7 +188,7 @@ describe('REST vs GraphQL API Equivalence Tests', () => {
     test('getTasks should return equivalent results', async () => {
       // Get tasks via REST API
       const restTasks = await restAPI.getTasks(restToken);
-      
+
       // Get tasks via GraphQL API
       const graphqlTasks = await graphqlAPI.getTasks(graphqlToken);
 
@@ -209,6 +209,8 @@ describe('REST vs GraphQL API Equivalence Tests', () => {
         expect(graphqlTask.title).toBe(testTask.title);
       }
     });
+
+
   });
 
   describe('Task Update Equivalence', () => {

@@ -104,21 +104,7 @@ const graphqlAPI = {
     return result.user;
   },
 
-  async getCurrentUser(token) {
-    const query = `
-      query {
-        me {
-          id
-          username
-          email
-          createdAt
-          updatedAt
-        }
-      }
-    `;
-    const result = await graphqlRequest(query, {}, token);
-    return result.me;
-  },
+
 
   async updateUser(userId, userData, token) {
     const mutation = `
@@ -167,25 +153,7 @@ const graphqlAPI = {
     return result.tasks;
   },
 
-  async getTaskById(taskId, token) {
-    const query = `
-      query GetTask($id: ID!) {
-        task(id: $id) {
-          id
-          title
-          description
-          status
-          priority
-          dueDate
-          createdAt
-          updatedAt
-          userId
-        }
-      }
-    `;
-    const result = await graphqlRequest(query, { id: taskId }, token);
-    return result.task;
-  },
+
 
   async createTask(taskData, token) {
     const mutation = `

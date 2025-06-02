@@ -100,12 +100,14 @@ describe('Basic API Equivalence Tests', () => {
       if (restTasks.length > 0) {
         expect(restTasks[0]).toHaveProperty('title');
       }
-      
+
       if (graphqlTasks.length > 0) {
         expect(graphqlTasks[0]).toHaveProperty('title');
         expect(graphqlTasks[0]).toHaveProperty('status');
       }
     });
+
+
 
     test('User retrieval should work in both APIs', async () => {
       // Test REST API user retrieval

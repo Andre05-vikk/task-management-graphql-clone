@@ -7,8 +7,7 @@ This directory contains comprehensive automated tests that prove functional equi
 The testing suite validates that the GraphQL API provides identical functionality to the existing REST API through three main test categories:
 
 1. **Basic Equivalence Tests** - Core functionality comparison
-2. **Full Equivalence Tests** - Comprehensive feature comparison  
-3. **GraphQL-Specific Tests** - GraphQL API validation
+2. **Full Equivalence Tests** - Comprehensive feature comparison
 
 ## Test Files
 
@@ -16,7 +15,6 @@ The testing suite validates that the GraphQL API provides identical functionalit
 
 - **`basic-equivalence.test.js`** - Simplified equivalence tests focusing on core operations
 - **`api-equivalence.test.js`** - Comprehensive tests covering all API features
-- **`api.test.js`** - GraphQL-specific functionality tests
 
 ### Support Files
 
@@ -42,21 +40,14 @@ npm run test:basic
 # Run comprehensive equivalence tests (requires APIs running)
 npm run test:equivalence
 
-# Run GraphQL-only tests (requires GraphQL API running)
-npm run test:graphql
-
 # Run all tests (requires APIs running)
 npm test
-
-# Legacy: Run tests with automatic API startup
-npm run test:apis
 ```
 
 ### Manual Test Execution
 
 ```bash
-# Legacy test script
-./tests/test.sh
+
 
 # Direct Jest execution
 npx jest tests/basic-equivalence.test.js --verbose

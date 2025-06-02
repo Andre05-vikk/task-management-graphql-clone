@@ -121,16 +121,6 @@ type Query {
   Get all tasks in the system
   """
   tasks: [Task!]!
-  
-  """
-  Get a specific task by ID
-  """
-  task(id: ID!): Task
-  
-  """
-  Get the currently authenticated user
-  """
-  me: User
 }
 
 type Mutation {

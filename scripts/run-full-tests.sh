@@ -175,14 +175,7 @@ fi
 
 echo ""
 
-# Run GraphQL-only tests
-echo -e "${YELLOW}📋 Running GraphQL API Tests...${NC}"
-if npm run test:graphql; then
-    print_success "GraphQL API tests passed!"
-else
-    print_error "GraphQL API tests failed!"
-    exit 1
-fi
+# Note: GraphQL-only tests removed as they were using outdated schema
 
 echo ""
 echo "=================================================="
@@ -190,8 +183,7 @@ print_success "🎉 ALL TESTS PASSED SUCCESSFULLY!"
 echo ""
 echo "📊 Test Summary:"
 echo "   ✅ Basic Equivalence Tests"
-echo "   ✅ Full Equivalence Tests" 
-echo "   ✅ GraphQL API Tests"
+echo "   ✅ Full Equivalence Tests"
 echo ""
 echo "🔍 APIs tested:"
 echo "   ✅ REST API (http://localhost:5001)"

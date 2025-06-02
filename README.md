@@ -99,19 +99,14 @@ docker-compose logs -f
 
 The project includes comprehensive automated tests to verify both GraphQL API functionality and equivalence with the REST API:
 
-### GraphQL API Tests
-```bash
-npm run test:graphql
-```
-
 ### API Equivalence Tests
 ```bash
 npm run test:equivalence
 ```
 
-### Complete Test Suite (Both APIs)
+### Basic Equivalence Tests
 ```bash
-npm run test:apis
+npm run test:basic
 ```
 
 ### Automated Full Test Suite (Recommended)
@@ -135,10 +130,7 @@ Same as above but asks if you want to keep APIs running for manual testing.
 npm test
 ```
 
-### Legacy Test Script
-```bash
-./tests/test.sh
-```
+
 
 ### Running tests with Docker
 If using Docker, make sure both containers are running, then execute:
