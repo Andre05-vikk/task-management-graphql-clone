@@ -14,7 +14,11 @@
     "test:basic": "jest tests/basic-equivalence.test.js",
     "test:full": "./scripts/run-full-tests.sh",
     "test:auto": "./scripts/test-all-auto.sh",
-    "validate-schema": "./scripts/validate-schema.sh"
+    "validate-schema": "./scripts/validate-schema.sh",
+    "setup": "./scripts/run.sh",
+    "setup:manual": "./scripts/run.sh --manual",
+    "setup:docker": "./scripts/run.sh",
+    "stop": "./scripts/stop.sh"
   },
   "repository": {
     "type": "git",

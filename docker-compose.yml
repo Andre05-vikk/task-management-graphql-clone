@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+  # MongoDB for GraphQL API
   mongodb:
     image: mongo:latest
     restart: always
@@ -9,6 +10,20 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  # MariaDB for REST API
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=notion_clone
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./notion-clone-api/database.sql:/docker-entrypoint-initdb.d/database.sql
+
+  # GraphQL Server
   graphql-server:
     build: .
     restart: always
@@ -21,5 +36,23 @@ services:
     depends_on:
       - mongodb
 
+  # REST API Server (Notion Clone)
+  rest-api:
+    build: ./notion-clone-api
+    restart: always
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - DB_HOST=mariadb
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_DATABASE=notion_clone
+      - JWT_SECRET=your-secret-key-should-be-long-and-secure
+      - API_URL=http://localhost:5001
+    depends_on:
+      - mariadb
+
 volumes:
   mongodb_data:
+  mariadb_data:
