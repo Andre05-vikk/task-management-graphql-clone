@@ -17,6 +17,14 @@ describe('Basic API Equivalence Tests', () => {
   let restToken, graphqlToken;
   let restUserId, graphqlUserId;
 
+  // Test data tracking for comprehensive cleanup
+  const testData = {
+    restUsers: [],
+    graphqlUsers: [],
+    restTasks: [],
+    graphqlTasks: []
+  };
+
   describe('Core Functionality Equivalence', () => {
     test('User registration should work in both APIs', async () => {
       console.log('\n🚀 Testing User Registration Equivalence');
@@ -33,6 +41,13 @@ describe('Basic API Equivalence Tests', () => {
       expect(restUser.username).toBe(testEmail);
       restUserId = restUser.id;
 
+      // Track for cleanup
+      testData.restUsers.push({ 
+        id: restUser.id, 
+        email: testEmail, 
+        token: null 
+      });
+
       // Test GraphQL API user creation
       const graphqlEmail = `graphql${Date.now()}@example.com`;
       const graphqlRequest = {
@@ -45,6 +60,13 @@ describe('Basic API Equivalence Tests', () => {
       expect(graphqlUser).toBeDefined();
       expect(graphqlUser.username).toBe(graphqlEmail);
       graphqlUserId = graphqlUser.id;
+
+      // Track for cleanup
+      testData.graphqlUsers.push({ 
+        id: graphqlUser.id, 
+        email: graphqlEmail, 
+        token: null 
+      });
 
       // Both should have IDs (types may differ: REST=number, GraphQL=string)
       expect(restUser.id).toBeDefined();
@@ -65,11 +87,23 @@ describe('Basic API Equivalence Tests', () => {
       expect(typeof restLogin.token).toBe('string');
       restToken = restLogin.token;
 
+      // Update token for cleanup
+      if (testData.restUsers.length > 0) {
+        testData.restUsers[0].token = restToken;
+      }
+
       // Test GraphQL API login
       const graphqlEmail = `graphql${Date.now()}@example.com`;
       await graphqlAPI.createUser({
         email: graphqlEmail,
         password: testPassword
+      });
+
+      // Track this additional user for cleanup
+      testData.graphqlUsers.push({ 
+        id: null, // Will be updated when we get the login response
+        email: graphqlEmail, 
+        token: null 
       });
       
       const graphqlLoginRequest = { email: graphqlEmail, password: testPassword };
@@ -80,6 +114,13 @@ describe('Basic API Equivalence Tests', () => {
       expect(typeof graphqlLogin.token).toBe('string');
       expect(graphqlLogin.user).toBeDefined();
       graphqlToken = graphqlLogin.token;
+
+      // Update the last added user with ID and token
+      if (testData.graphqlUsers.length > 0 && graphqlLogin.user) {
+        const lastUser = testData.graphqlUsers[testData.graphqlUsers.length - 1];
+        lastUser.id = graphqlLogin.user.id;
+        lastUser.token = graphqlToken;
+      }
 
       // Both should return valid tokens
       expect(restLogin.token.length).toBeGreaterThan(10);
@@ -102,6 +143,15 @@ describe('Basic API Equivalence Tests', () => {
       expect(restTask).toBeDefined();
       expect(restTask.title || restTask.title).toBe(taskData.title);
 
+      // Track task for cleanup
+      const restTaskId = restTask.taskId || restTask.id;
+      if (restTaskId) {
+        testData.restTasks.push({ 
+          id: restTaskId, 
+          title: taskData.title 
+        });
+      }
+
       // Test GraphQL API task creation
       const graphqlTask = await graphqlAPI.createTask(taskData, graphqlToken);
       logAPICall('GraphQL', 'Task Creation', { taskData, token: '***' }, graphqlTask);
@@ -109,6 +159,14 @@ describe('Basic API Equivalence Tests', () => {
       expect(graphqlTask).toBeDefined();
       expect(graphqlTask.title).toBe(taskData.title);
       expect(graphqlTask.status).toBe(taskData.status);
+
+      // Track task for cleanup
+      if (graphqlTask.id) {
+        testData.graphqlTasks.push({ 
+          id: graphqlTask.id, 
+          title: taskData.title 
+        });
+      }
 
       // Both should create tasks successfully
       expect(restTask.success || restTask.id || restTask.taskId).toBeTruthy();
@@ -207,6 +265,13 @@ describe('Basic API Equivalence Tests', () => {
       const firstUser = await restAPI.createUser(userRequest);
       logAPICall('REST', 'First User Creation', userRequest, firstUser);
 
+      // Track for cleanup
+      testData.restUsers.push({ 
+        id: firstUser.id, 
+        email: duplicateTestEmail, 
+        token: null 
+      });
+
       // Then try to create the same user again - should fail
       try {
         await restAPI.createUser(userRequest);
@@ -221,6 +286,13 @@ describe('Basic API Equivalence Tests', () => {
       
       const firstGraphQLUser = await graphqlAPI.createUser(graphqlUserRequest);
       logAPICall('GraphQL', 'First User Creation', graphqlUserRequest, firstGraphQLUser);
+
+      // Track for cleanup
+      testData.graphqlUsers.push({ 
+        id: firstGraphQLUser.id, 
+        email: graphqlDuplicateEmail, 
+        token: null 
+      });
 
       // Try to create the same user again - should fail
       try {
@@ -255,22 +327,122 @@ describe('Basic API Equivalence Tests', () => {
     });
   });
 
+  // Comprehensive cleanup function
   afterAll(async () => {
-    // Cleanup: try to delete created users
-    try {
-      if (restUserId && restToken) {
-        await restAPI.deleteUser(restUserId, restToken);
+    console.log('\n🧹 Starting comprehensive test cleanup...');
+    
+    // Helper function for safe deletion with logging
+    const safeDelete = async (deleteFunction, description, data) => {
+      try {
+        console.log(`🗑️  Deleting ${description}:`, data);
+        const result = await deleteFunction();
+        console.log(`✅ Successfully deleted ${description}`);
+        return result;
+      } catch (error) {
+        console.log(`⚠️  Failed to delete ${description}:`, error.message);
+        return false;
       }
-    } catch (error) {
-      console.log('REST cleanup failed:', error.message);
+    };
+
+    // Delete REST tasks first (dependency order)
+    for (const task of testData.restTasks) {
+      if (task.id) {
+        // Re-authenticate if needed
+        if (!restToken && testData.restUsers.length > 0) {
+          try {
+            const user = testData.restUsers[0];
+            const loginResult = await restAPI.login(user.email, testPassword);
+            restToken = loginResult.token;
+            logAPICall('REST', 'Re-authentication for cleanup', { email: user.email }, { token: '***', success: true });
+          } catch (error) {
+            console.log('⚠️  REST re-authentication failed for cleanup:', error.message);
+          }
+        }
+        
+        await safeDelete(
+          () => restAPI.deleteTask(task.id, restToken),
+          `REST task (${task.title})`,
+          { id: task.id, title: task.title }
+        );
+      }
     }
 
-    try {
-      if (graphqlUserId && graphqlToken) {
-        await graphqlAPI.deleteUser(graphqlUserId, graphqlToken);
+    // Delete GraphQL tasks first (dependency order)
+    for (const task of testData.graphqlTasks) {
+      if (task.id) {
+        // Re-authenticate if needed
+        if (!graphqlToken && testData.graphqlUsers.length > 0) {
+          try {
+            const user = testData.graphqlUsers[testData.graphqlUsers.length - 1]; // Use the last user
+            const loginResult = await graphqlAPI.login(user.email, testPassword);
+            graphqlToken = loginResult.token;
+            logAPICall('GraphQL', 'Re-authentication for cleanup', { email: user.email }, { token: '***', success: true });
+          } catch (error) {
+            console.log('⚠️  GraphQL re-authentication failed for cleanup:', error.message);
+          }
+        }
+        
+        await safeDelete(
+          () => graphqlAPI.deleteTask(task.id, graphqlToken),
+          `GraphQL task (${task.title})`,
+          { id: task.id, title: task.title }
+        );
       }
-    } catch (error) {
-      console.log('GraphQL cleanup failed:', error.message);
     }
+
+    // Delete REST users
+    for (const user of testData.restUsers) {
+      if (user.id) {
+        // Re-authenticate if token is not available
+        let tokenToUse = user.token || restToken;
+        if (!tokenToUse) {
+          try {
+            const loginResult = await restAPI.login(user.email, testPassword);
+            tokenToUse = loginResult.token;
+            logAPICall('REST', 'Re-authentication for user cleanup', { email: user.email }, { token: '***', success: true });
+          } catch (error) {
+            console.log('⚠️  REST re-authentication failed for user cleanup:', error.message);
+            continue;
+          }
+        }
+        
+        await safeDelete(
+          () => restAPI.deleteUser(user.id, tokenToUse),
+          `REST user (${user.email})`,
+          { id: user.id, email: user.email }
+        );
+      }
+    }
+
+    // Delete GraphQL users
+    for (const user of testData.graphqlUsers) {
+      if (user.id) {
+        // Re-authenticate if token is not available
+        let tokenToUse = user.token || graphqlToken;
+        if (!tokenToUse) {
+          try {
+            const loginResult = await graphqlAPI.login(user.email, testPassword);
+            tokenToUse = loginResult.token;
+            logAPICall('GraphQL', 'Re-authentication for user cleanup', { email: user.email }, { token: '***', success: true });
+          } catch (error) {
+            console.log('⚠️  GraphQL re-authentication failed for user cleanup:', error.message);
+            continue;
+          }
+        }
+        
+        await safeDelete(
+          () => graphqlAPI.deleteUser(user.id, tokenToUse),
+          `GraphQL user (${user.email})`,
+          { id: user.id, email: user.email }
+        );
+      }
+    }
+
+    console.log('🧹 Test cleanup completed');
+    console.log('📊 Cleanup Summary:');
+    console.log(`   REST users tracked: ${testData.restUsers.length}`);
+    console.log(`   GraphQL users tracked: ${testData.graphqlUsers.length}`);
+    console.log(`   REST tasks tracked: ${testData.restTasks.length}`);
+    console.log(`   GraphQL tasks tracked: ${testData.graphqlTasks.length}`);
   });
 });
