@@ -9,5 +9,6 @@ module.exports = {
     'src/**/*.js',
     '!src/index.js' // Exclude main entry point
   ],
-  verbose: true
+  verbose: true,
+  silent: false // Enable console output for API visualization
 };
