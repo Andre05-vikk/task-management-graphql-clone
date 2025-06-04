@@ -15,6 +15,7 @@ The testing suite validates that the GraphQL API provides identical functionalit
 
 - **`basic-equivalence.test.js`** - Simplified equivalence tests focusing on core operations
 - **`api-equivalence.test.js`** - Comprehensive tests covering all API features
+- **`test-user-lifecycle.js`** - User lifecycle test (create → delete → verify deletion)
 
 ### Support Files
 
@@ -22,6 +23,11 @@ The testing suite validates that the GraphQL API provides identical functionalit
 - **`graphql-client.js`** - GraphQL API client with all query/mutation functions
 - **`setup.js`** - Jest test configuration and global setup
 - **`test.sh`** - Legacy test script for manual execution
+
+### Database Cleanup Scripts
+
+- **`clear-mongodb.js`** - MongoDB database cleanup script (removes all users and tasks)
+- **`clear-all-databases.sh`** - Combined cleanup script for both MySQL and MongoDB databases
 
 ## Running Tests
 
@@ -47,10 +53,24 @@ npm test
 ### Manual Test Execution
 
 ```bash
-
+# Run user lifecycle test (requires APIs running)
+cd tests && node test-user-lifecycle.js
 
 # Direct Jest execution
 npx jest tests/basic-equivalence.test.js --verbose
+```
+
+### Database Cleanup
+
+```bash
+# Clear both databases (MySQL + MongoDB)
+cd tests && ./clear-all-databases.sh
+
+# Clear only MongoDB
+cd tests && node clear-mongodb.js
+
+# Clear only MySQL
+cd notion-clone-api && node clear-db.js
 ```
 
 ## Test Requirements

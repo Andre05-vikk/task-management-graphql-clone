@@ -34,7 +34,6 @@ const graphqlAPI = {
         createUser(input: $input) {
           id
           username
-          email
           createdAt
           updatedAt
         }
@@ -49,11 +48,6 @@ const graphqlAPI = {
       mutation Login($input: LoginInput!) {
         login(input: $input) {
           token
-          user {
-            id
-            username
-            email
-          }
         }
       }
     `;
@@ -78,7 +72,6 @@ const graphqlAPI = {
         users {
           id
           username
-          email
           createdAt
           updatedAt
         }
@@ -94,7 +87,6 @@ const graphqlAPI = {
         user(id: $id) {
           id
           username
-          email
           createdAt
           updatedAt
         }
@@ -141,11 +133,9 @@ const graphqlAPI = {
           title
           description
           status
-          priority
-          dueDate
+          user_id
           createdAt
           updatedAt
-          userId
         }
       }
     `;
@@ -163,11 +153,9 @@ const graphqlAPI = {
           title
           description
           status
-          priority
-          dueDate
+          user_id
           createdAt
           updatedAt
-          userId
         }
       }
     `;
@@ -183,11 +171,9 @@ const graphqlAPI = {
           title
           description
           status
-          priority
-          dueDate
+          user_id
           createdAt
           updatedAt
-          userId
         }
       }
     `;

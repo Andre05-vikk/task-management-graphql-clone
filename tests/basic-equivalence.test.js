@@ -1,14 +1,6 @@
 const { restAPI } = require('./rest-client');
 const { graphqlAPI } = require('./graphql-client');
-
-// Console logging helper for API visualization
-function logAPICall(apiType, operation, request, response) {
-  // Use process.stdout.write to bypass Jest's console suppression
-  process.stdout.write(`\n🔵 ${apiType} API - ${operation}\n`);
-  process.stdout.write(`📤 Request: ${JSON.stringify(request, null, 2)}\n`);
-  process.stdout.write(`📥 Response: ${JSON.stringify(response, null, 2)}\n`);
-  process.stdout.write(`${'─'.repeat(80)}\n`);
-}
+const { logAPICallForced: logAPICall, safeDelete, reAuthenticate } = require('./test-utils');
 
 describe('Basic API Equivalence Tests', () => {
   const testEmail = `basictest${Date.now()}@example.com`;
@@ -112,13 +104,11 @@ describe('Basic API Equivalence Tests', () => {
       
       expect(graphqlLogin.token).toBeDefined();
       expect(typeof graphqlLogin.token).toBe('string');
-      expect(graphqlLogin.user).toBeDefined();
       graphqlToken = graphqlLogin.token;
 
-      // Update the last added user with ID and token
-      if (testData.graphqlUsers.length > 0 && graphqlLogin.user) {
+      // Update the last added user with token
+      if (testData.graphqlUsers.length > 0) {
         const lastUser = testData.graphqlUsers[testData.graphqlUsers.length - 1];
-        lastUser.id = graphqlLogin.user.id;
         lastUser.token = graphqlToken;
       }
 
@@ -331,32 +321,15 @@ describe('Basic API Equivalence Tests', () => {
   afterAll(async () => {
     console.log('\n🧹 Starting comprehensive test cleanup...');
     
-    // Helper function for safe deletion with logging
-    const safeDelete = async (deleteFunction, description, data) => {
-      try {
-        console.log(`🗑️  Deleting ${description}:`, data);
-        const result = await deleteFunction();
-        console.log(`✅ Successfully deleted ${description}`);
-        return result;
-      } catch (error) {
-        console.log(`⚠️  Failed to delete ${description}:`, error.message);
-        return false;
-      }
-    };
+
 
     // Delete REST tasks first (dependency order)
     for (const task of testData.restTasks) {
       if (task.id) {
         // Re-authenticate if needed
         if (!restToken && testData.restUsers.length > 0) {
-          try {
-            const user = testData.restUsers[0];
-            const loginResult = await restAPI.login(user.email, testPassword);
-            restToken = loginResult.token;
-            logAPICall('REST', 'Re-authentication for cleanup', { email: user.email }, { token: '***', success: true });
-          } catch (error) {
-            console.log('⚠️  REST re-authentication failed for cleanup:', error.message);
-          }
+          const user = testData.restUsers[0];
+          restToken = await reAuthenticate(restAPI, user, testPassword, 'REST', 'cleanup');
         }
         
         await safeDelete(

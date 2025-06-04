@@ -28,18 +28,7 @@ const resolvers = {
     }
   },
 
-  // Type resolvers
-  User: {
-    tasks: async (parent) => {
-      return await Task.find({ userId: parent.id });
-    }
-  },
-  
-  Task: {
-    user: async (parent) => {
-      return await User.findById(parent.userId);
-    }
-  },
+  // Type resolvers (removed User.tasks and Task.user to match REST API)
 
   // Query resolvers
   Query: {
@@ -63,8 +52,19 @@ const resolvers = {
     tasks: async (_, __, context) => {
       // Authenticate user
       const user = checkAuth(context);
-      // Return tasks for the authenticated user only
-      return await Task.find({ userId: user.id });
+      // Get tasks for the authenticated user only
+      const tasks = await Task.find({ userId: user.id });
+
+      // Transform tasks to match REST API format
+      return tasks.map(task => ({
+        id: task._id.toString(),
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        user_id: task.userId.toString(),
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt
+      }));
     }
   },
 
@@ -161,9 +161,19 @@ const resolvers = {
         ...input,
         userId: user.id
       });
-      
+
       await task.save();
-      return task;
+
+      // Return task with user_id field to match REST API
+      return {
+        id: task._id.toString(),
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        user_id: task.userId.toString(),
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt
+      };
     },
     
     // Update an existing task
@@ -189,8 +199,17 @@ const resolvers = {
         { $set: input },
         { new: true, runValidators: true }
       );
-      
-      return updatedTask;
+
+      // Return task with user_id field to match REST API
+      return {
+        id: updatedTask._id.toString(),
+        title: updatedTask.title,
+        description: updatedTask.description,
+        status: updatedTask.status,
+        user_id: updatedTask.userId.toString(),
+        createdAt: updatedTask.createdAt,
+        updatedAt: updatedTask.updatedAt
+      };
     },
     
     // Delete a task
@@ -242,8 +261,7 @@ const resolvers = {
       );
       
       return {
-        token,
-        user
+        token
       };
     },
     

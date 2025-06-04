@@ -12,6 +12,7 @@
     "test": "jest",
     "test:equivalence": "jest tests/api-equivalence.test.js",
     "test:basic": "jest tests/basic-equivalence.test.js",
+    "test:differences": "node tests/test-differences.js",
     "test:full": "./scripts/run-full-tests.sh",
     "test:auto": "./scripts/test-all-auto.sh",
     "validate-schema": "./scripts/validate-schema.sh",

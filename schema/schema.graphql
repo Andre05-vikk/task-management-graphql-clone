@@ -11,12 +11,8 @@ User type represents a user in the system
 type User {
   id: ID!
   username: String!
-  email: String!
-  firstName: String
-  lastName: String
   createdAt: DateTime!
   updatedAt: DateTime!
-  tasks: [Task!]
 }
 
 """
@@ -27,12 +23,9 @@ type Task {
   title: String!
   description: String
   status: TaskStatus!
-  priority: TaskPriority
-  dueDate: DateTime
+  user_id: ID!
   createdAt: DateTime!
   updatedAt: DateTime!
-  userId: ID!
-  user: User!
 }
 
 """
@@ -40,7 +33,6 @@ Authentication result containing JWT token
 """
 type AuthPayload {
   token: String!
-  user: User!
 }
 
 """
@@ -52,14 +44,7 @@ enum TaskStatus {
   completed
 }
 
-"""
-Task priority levels
-"""
-enum TaskPriority {
-  LOW
-  MEDIUM
-  HIGH
-}
+
 
 """
 Input type for creating a new user
@@ -83,8 +68,6 @@ input CreateTaskInput {
   title: String!
   description: String
   status: TaskStatus = pending
-  priority: TaskPriority
-  dueDate: DateTime
 }
 
 """
@@ -94,8 +77,6 @@ input UpdateTaskInput {
   title: String
   description: String
   status: TaskStatus
-  priority: TaskPriority
-  dueDate: DateTime
 }
 
 """
