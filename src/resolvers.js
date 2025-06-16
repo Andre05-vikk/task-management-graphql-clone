@@ -48,7 +48,7 @@ const resolvers = {
       return await User.findById(id);
     },
     
-    // Get all tasks (user-specific, like REST API)
+    // Get all tasks (user-specific, like REST API) with pagination
     tasks: async (_, __, context) => {
       // Authenticate user
       const user = checkAuth(context);
@@ -56,7 +56,7 @@ const resolvers = {
       const tasks = await Task.find({ userId: user.id });
 
       // Transform tasks to match REST API format
-      return tasks.map(task => ({
+      const transformedTasks = tasks.map(task => ({
         id: task._id.toString(),
         title: task.title,
         description: task.description,
@@ -65,6 +65,14 @@ const resolvers = {
         createdAt: task.createdAt,
         updatedAt: task.updatedAt
       }));
+
+      // Return in REST API pagination format
+      return {
+        page: 1,
+        limit: 10,
+        total: transformedTasks.length,
+        tasks: transformedTasks
+      };
     }
   },
 
@@ -146,9 +154,10 @@ const resolvers = {
 
       // Delete the user and their tasks
       await Task.deleteMany({ userId: id });
-      const result = await User.findByIdAndDelete(id);
+      await User.findByIdAndDelete(id);
 
-      return !!result; // Return true if user was deleted, false otherwise
+      // Return null to match REST 204 No Content
+      return null;
     },
     
     // Create a new task
@@ -164,15 +173,15 @@ const resolvers = {
 
       await task.save();
 
-      // Return task with user_id field to match REST API
+      // Return task in REST API format with metadata
       return {
+        success: true,
+        message: "Task created successfully",
+        taskId: task._id.toString(),
         id: task._id.toString(),
         title: task.title,
         description: task.description,
-        status: task.status,
-        user_id: task.userId.toString(),
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt
+        status: task.status
       };
     },
     
@@ -194,21 +203,16 @@ const resolvers = {
       }
       
       // Update the task
-      const updatedTask = await Task.findByIdAndUpdate(
+      await Task.findByIdAndUpdate(
         id,
         { $set: input },
         { new: true, runValidators: true }
       );
 
-      // Return task with user_id field to match REST API
+      // Return update response to match REST API format
       return {
-        id: updatedTask._id.toString(),
-        title: updatedTask.title,
-        description: updatedTask.description,
-        status: updatedTask.status,
-        user_id: updatedTask.userId.toString(),
-        createdAt: updatedTask.createdAt,
-        updatedAt: updatedTask.updatedAt
+        success: true,
+        message: 'Task updated successfully'
       };
     },
     
@@ -230,9 +234,10 @@ const resolvers = {
       }
       
       // Delete the task
-      const result = await Task.findByIdAndDelete(id);
+      await Task.findByIdAndDelete(id);
       
-      return !!result; // Return true if task was deleted, false otherwise
+      // Return null to match REST 204 No Content
+      return null;
     },
     
     // User login

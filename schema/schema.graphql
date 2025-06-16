@@ -36,6 +36,36 @@ type AuthPayload {
 }
 
 """
+Task creation response to match REST API format
+"""
+type TaskCreationResponse {
+  success: Boolean!
+  message: String!
+  taskId: ID!
+  title: String!
+  description: String
+  status: TaskStatus!
+}
+
+"""
+Task response with pagination metadata to match REST API
+"""
+type TasksResponse {
+  page: Int!
+  limit: Int!
+  total: Int!
+  tasks: [Task!]!
+}
+
+"""
+Task update response to match REST API format
+"""
+type TaskUpdateResponse {
+  success: Boolean!
+  message: String!
+}
+
+"""
 Available task statuses
 """
 enum TaskStatus {
@@ -99,9 +129,9 @@ type Query {
   user(id: ID!): User
   
   """
-  Get all tasks in the system
+  Get all tasks in the system with pagination metadata
   """
-  tasks: [Task!]!
+  tasks: TasksResponse!
 }
 
 type Mutation {
@@ -116,24 +146,24 @@ type Mutation {
   updateUser(id: ID!, input: UpdateUserInput!): User!
   
   """
-  Delete a user account
+  Delete a user account - returns null to match REST 204 No Content
   """
-  deleteUser(id: ID!): Boolean!
+  deleteUser(id: ID!): String
   
   """
   Create a new task
   """
-  createTask(input: CreateTaskInput!): Task!
+  createTask(input: CreateTaskInput!): TaskCreationResponse!
   
   """
   Update an existing task
   """
-  updateTask(id: ID!, input: UpdateTaskInput!): Task!
+  updateTask(id: ID!, input: UpdateTaskInput!): TaskUpdateResponse!
   
   """
-  Delete a task
+  Delete a task - returns null to match REST 204 No Content
   """
-  deleteTask(id: ID!): Boolean!
+  deleteTask(id: ID!): String
   
   """
   Log in a user and return an authentication token

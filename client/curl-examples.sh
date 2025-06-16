@@ -13,14 +13,11 @@ echo "1. Creating a new user..."
 CREATE_USER=$(curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id username email } }",
+    "query": "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id username createdAt } }",
     "variables": {
       "input": {
-        "username": "curluser",
         "email": "curl@example.com",
-        "password": "password123",
-        "firstName": "Curl",
-        "lastName": "User"
+        "password": "password123"
       }
     }
   }')

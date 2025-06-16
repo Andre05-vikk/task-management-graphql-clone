@@ -42,14 +42,13 @@ async function runExamples() {
         createUser(input: $input) {
           id
           username
-          email
           createdAt
         }
       }
     `;
     const createUserVars = {
       input: {
-        email: 'test@example.com',
+        email: `test${Date.now()}@example.com`,
         password: 'password123'
       }
     };
@@ -63,17 +62,12 @@ async function runExamples() {
       mutation Login($input: LoginInput!) {
         login(input: $input) {
           token
-          user {
-            id
-            username
-            email
-          }
         }
       }
     `;
     const loginVars = {
       input: {
-        email: 'test@example.com',
+        email: createUserVars.input.email,
         password: 'password123'
       }
     };
@@ -82,32 +76,31 @@ async function runExamples() {
     console.log('Logged in successfully. Token received.');
     const token = loginData.login.token;
     
-    // 3. Get current user info (me)
-    console.log('\n3. Getting current user info:');
-    const meQuery = `
-      query Me {
-        me {
+    // 3. Get all users
+    console.log('\n3. Getting all users:');
+    const usersQuery = `
+      query Users {
+        users {
           id
           username
-          email
         }
       }
     `;
     
-    const meData = await graphqlRequest(meQuery, {}, token);
-    console.log('Current user:', meData.me);
+    const usersData = await graphqlRequest(usersQuery, {}, token);
+    console.log('All users:', usersData.users.slice(0, 3)); // Show first 3 users
     
     // 4. Create a new task
     console.log('\n4. Creating a new task:');
     const createTaskQuery = `
       mutation CreateTask($input: CreateTaskInput!) {
         createTask(input: $input) {
-          id
+          success
+          message
+          taskId
           title
           description
           status
-          priority
-          createdAt
         }
       }
     `;
@@ -115,33 +108,31 @@ async function runExamples() {
       input: {
         title: 'Complete GraphQL Implementation',
         description: 'Implement a GraphQL API that mirrors the REST API functionality',
-        status: 'in_progress',
-        priority: 'HIGH'
+        status: 'in_progress'
       }
     };
     
     const newTask = await graphqlRequest(createTaskQuery, createTaskVars, token);
     console.log('Task created:', newTask.createTask);
-    const taskId = newTask.createTask.id;
+    const taskId = newTask.createTask.taskId;
     
     // 5. Get all tasks
     console.log('\n5. Getting all tasks:');
     const tasksQuery = `
       query GetTasks {
         tasks {
-          id
-          title
-          status
-          priority
-          user {
-            username
+          tasks {
+            id
+            title
+            status
+            user_id
           }
         }
       }
     `;
     
     const tasksData = await graphqlRequest(tasksQuery, {}, token);
-    console.log('All tasks:', tasksData.tasks);
+    console.log('All tasks:', tasksData.tasks.tasks);
     
     // 6. Update task
     console.log('\n6. Updating task:');
@@ -198,7 +189,7 @@ async function runExamples() {
       }
     `;
     const deleteUserVars = {
-      id: loginData.login.user.id
+      id: newUser.createUser.id
     };
     
     const deleteUserResult = await graphqlRequest(deleteUserQuery, deleteUserVars, token);

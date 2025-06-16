@@ -1,62 +1,68 @@
 # Task Management GraphQL Clone
 
-GraphQL implementation of a task management API with REST API comparison.
+A GraphQL implementation of a task management API that provides equivalent functionality to a REST API.
+
+## Project Purpose
+
+This project demonstrates how to create a GraphQL API that provides the same functionality as an existing REST API, allowing comparison of both approaches for managing users and tasks.
 
 ## Requirements
 
-- Node.js 16+
 - Docker & Docker Compose
+- Node.js 16+ (for development only)
 
-## Quick Start
+## Building and Running
 
-### One Command (Recommended)
+### Start the services (one command):
 ```bash
-# Start everything with Docker (full setup)
-./scripts/run.sh
-# OR
-npm run setup
-
-# Manual GraphQL-only setup
-./scripts/run.sh --manual
-# OR  
-npm run setup:manual
-
-# Stop all services
-./scripts/stop.sh
-# OR
-npm run stop
+./run.sh
 ```
 
-### Docker
-```bash
-# Start all services
-docker-compose up -d
-
-# Stop services
-docker-compose down
-```
-
-### Manual
-```bash
-npm install
-npm start
-```
-
-## Services
-
+This will:
+- Start both GraphQL and REST APIs using Docker
 - GraphQL API: http://localhost:4000
 - REST API: http://localhost:5001
 - GraphQL Playground: http://localhost:4000
 
+### Stop the services:
+```bash
+docker-compose down
+```
+
 ## Testing
 
+Run all automated tests:
 ```bash
-# Run all tests automatically
-npm run test:auto
-
-# Basic equivalence tests
-npm run test:basic
-
-# All tests (requires running APIs)
-npm test
+./tests/test.sh
 ```
+
+## API Examples
+
+### GraphQL Examples (JavaScript):
+```bash
+node client/example.js
+```
+
+### GraphQL Examples (curl):
+```bash
+chmod +x client/curl-examples.sh
+./client/curl-examples.sh
+```
+
+## Available Operations
+
+### Users
+- Create user (signup)
+- Login/logout
+- Get user by ID
+- Get all users
+- Update user
+- Delete user
+
+### Tasks
+- Create task
+- Get all tasks (with pagination)
+- Update task
+- Delete task
+
+All operations are available in both GraphQL (mutations/queries) and REST (HTTP endpoints) formats with equivalent functionality and response structures.

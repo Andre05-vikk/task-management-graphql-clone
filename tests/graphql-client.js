@@ -40,6 +40,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(mutation, { input: userData });
+    console.log('GraphQL createUser:', JSON.stringify(result.createUser, null, 2));
     return result.createUser;
   },
 
@@ -52,6 +53,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(mutation, { input: { email, password } });
+    console.log('GraphQL login:', JSON.stringify(result.login, null, 2));
     return result.login;
   },
 
@@ -62,6 +64,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(mutation, {}, token);
+    console.log('GraphQL logout:', JSON.stringify(result.logout, null, 2));
     return result.logout;
   },
 
@@ -78,6 +81,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(query, {}, token);
+    console.log('GraphQL getUsers:', JSON.stringify(result.users, null, 2));
     return result.users;
   },
 
@@ -93,6 +97,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(query, { id: userId }, token);
+    console.log('GraphQL getUserById:', JSON.stringify(result.user, null, 2));
     return result.user;
   },
 
@@ -111,6 +116,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(mutation, { id: userId, input: userData }, token);
+    console.log('GraphQL updateUser:', JSON.stringify(result.updateUser, null, 2));
     return result.updateUser;
   },
 
@@ -121,6 +127,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(mutation, { id: userId }, token);
+    console.log('GraphQL deleteUser:', JSON.stringify(result.deleteUser, null, 2));
     return result.deleteUser;
   },
 
@@ -129,18 +136,25 @@ const graphqlAPI = {
     const query = `
       query {
         tasks {
-          id
-          title
-          description
-          status
-          user_id
-          createdAt
-          updatedAt
+          page
+          limit
+          total
+          tasks {
+            id
+            title
+            description
+            status
+            user_id
+            createdAt
+            updatedAt
+          }
         }
       }
     `;
     const result = await graphqlRequest(query, {}, token);
-    return result.tasks;
+    console.log('GraphQL getTasks:', JSON.stringify(result.tasks, null, 2));
+    // Return the tasks array to match REST API format (which gets the tasks from response.data.tasks)
+    return result.tasks.tasks || [];
   },
 
 
@@ -149,17 +163,23 @@ const graphqlAPI = {
     const mutation = `
       mutation CreateTask($input: CreateTaskInput!) {
         createTask(input: $input) {
-          id
+          success
+          message
+          taskId
           title
           description
           status
-          user_id
-          createdAt
-          updatedAt
         }
       }
     `;
     const result = await graphqlRequest(mutation, { input: taskData }, token);
+    console.log('GraphQL createTask:', JSON.stringify(result.createTask, null, 2));
+    
+    // Add id field for compatibility with test expectations
+    if (result.createTask && result.createTask.taskId) {
+      result.createTask.id = result.createTask.taskId;
+    }
+    
     return result.createTask;
   },
 
@@ -178,6 +198,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(mutation, { id: taskId, input: taskData }, token);
+    console.log('GraphQL updateTask:', JSON.stringify(result.updateTask, null, 2));
     return result.updateTask;
   },
 
@@ -188,6 +209,7 @@ const graphqlAPI = {
       }
     `;
     const result = await graphqlRequest(mutation, { id: taskId }, token);
+    console.log('GraphQL deleteTask:', JSON.stringify(result.deleteTask, null, 2));
     return result.deleteTask;
   }
 };
