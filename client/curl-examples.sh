@@ -3,6 +3,7 @@
 
 API_URL="http://localhost:4000/graphql"
 TOKEN=""
+TIMESTAMP=$(date +%s)
 
 echo "GraphQL API Curl Examples"
 echo "========================="
@@ -12,15 +13,15 @@ echo
 echo "1. Creating a new user..."
 CREATE_USER=$(curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
-  -d '{
-    "query": "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id username createdAt } }",
-    "variables": {
-      "input": {
-        "email": "curl@example.com",
-        "password": "password123"
+  -d "{
+    \"query\": \"mutation CreateUser(\$input: CreateUserInput!) { createUser(input: \$input) { id username createdAt } }\",
+    \"variables\": {
+      \"input\": {
+        \"email\": \"curl${TIMESTAMP}@example.com\",
+        \"password\": \"password123\"
       }
     }
-  }')
+  }")
 
 echo "$CREATE_USER" | jq .
 USER_ID=$(echo "$CREATE_USER" | jq -r '.data.createUser.id')
@@ -31,15 +32,15 @@ echo
 echo "2. Logging in..."
 LOGIN_RESULT=$(curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
-  -d '{
-    "query": "mutation Login($input: LoginInput!) { login(input: $input) { token user { id username } } }",
-    "variables": {
-      "input": {
-        "email": "curl@example.com",
-        "password": "password123"
+  -d "{
+    \"query\": \"mutation Login(\$input: LoginInput!) { login(input: \$input) { token } }\",
+    \"variables\": {
+      \"input\": {
+        \"email\": \"curl${TIMESTAMP}@example.com\",
+        \"password\": \"password123\"
       }
     }
-  }')
+  }")
 
 echo "$LOGIN_RESULT" | jq .
 TOKEN=$(echo "$LOGIN_RESULT" | jq -r '.data.login.token')
@@ -52,7 +53,7 @@ curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "query": "query { users { id username email } }"
+    "query": "query { users { id username createdAt updatedAt } }"
   }' | jq .
 echo
 
@@ -62,7 +63,7 @@ curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d "{
-    \"query\": \"query GetUser(\$id: ID!) { user(id: \$id) { id username email } }\",
+    \"query\": \"query GetUser(\$id: ID!) { user(id: \$id) { id username createdAt updatedAt } }\",
     \"variables\": {
       \"id\": \"$USER_ID\"
     }
@@ -75,19 +76,18 @@ CREATE_TASK=$(curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "query": "mutation CreateTask($input: CreateTaskInput!) { createTask(input: $input) { id title status } }",
+    "query": "mutation CreateTask($input: CreateTaskInput!) { createTask(input: $input) { success message taskId title description status } }",
     "variables": {
       "input": {
         "title": "Test Task from curl",
         "description": "Created using curl command",
-        "status": "TO_DO",
-        "priority": "MEDIUM"
+        "status": "pending"
       }
     }
   }')
 
 echo "$CREATE_TASK" | jq .
-TASK_ID=$(echo "$CREATE_TASK" | jq -r '.data.createTask.id')
+TASK_ID=$(echo "$CREATE_TASK" | jq -r '.data.createTask.taskId')
 echo "Task created with ID: $TASK_ID"
 echo
 
@@ -97,7 +97,7 @@ curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
-    "query": "query { tasks { id title status } }"
+    "query": "query { tasks { page limit total tasks { id title description status user_id createdAt updatedAt } } }"
   }' | jq .
 echo
 
@@ -107,11 +107,11 @@ curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d "{
-    \"query\": \"mutation UpdateTask(\$id: ID!, \$input: UpdateTaskInput!) { updateTask(id: \$id, input: \$input) { id title status } }\",
+    \"query\": \"mutation UpdateTask(\$id: ID!, \$input: UpdateTaskInput!) { updateTask(id: \$id, input: \$input) { success message } }\",
     \"variables\": {
       \"id\": \"$TASK_ID\",
       \"input\": {
-        \"status\": \"IN_PROGRESS\",
+        \"status\": \"in_progress\",
         \"title\": \"Updated Task from curl\"
       }
     }
@@ -137,12 +137,11 @@ curl -s -X POST $API_URL \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d "{
-    \"query\": \"mutation UpdateUser(\$id: ID!, \$input: UpdateUserInput!) { updateUser(id: \$id, input: \$input) { id firstName lastName } }\",
+    \"query\": \"mutation UpdateUser(\$id: ID!, \$input: UpdateUserInput!) { updateUser(id: \$id, input: \$input) { id username updatedAt } }\",
     \"variables\": {
       \"id\": \"$USER_ID\",
       \"input\": {
-        \"firstName\": \"Updated\",
-        \"lastName\": \"Name\"
+        \"password\": \"newpassword123\"
       }
     }
   }" | jq .
