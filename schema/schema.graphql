@@ -41,7 +41,7 @@ Task creation response to match REST API format
 type TaskCreationResponse {
   success: Boolean!
   message: String!
-  taskId: ID!
+  taskId: String!
   title: String!
   description: String
   status: TaskStatus!

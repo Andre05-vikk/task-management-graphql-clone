@@ -139,10 +139,8 @@ async function runExamples() {
     const updateTaskQuery = `
       mutation UpdateTask($id: ID!, $input: UpdateTaskInput!) {
         updateTask(id: $id, input: $input) {
-          id
-          title
-          status
-          updatedAt
+          success
+          message
         }
       }
     `;

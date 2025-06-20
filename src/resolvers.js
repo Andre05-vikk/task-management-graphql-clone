@@ -28,7 +28,28 @@ const resolvers = {
     }
   },
 
-  // Type resolvers (removed User.tasks and Task.user to match REST API)
+  // Type resolvers to transform data for REST API compatibility
+  User: {
+    id: (user) => user.userId || parseInt(user._id.toString().slice(-8), 16)
+  },
+
+  Task: {
+    // Transformation handled directly in tasks query
+  },
+
+  TaskCreationResponse: {
+    taskId: (response) => {
+      // If taskId is already an integer, return it
+      if (typeof response.taskId === 'number') {
+        return response.taskId;
+      }
+      // If taskId is a string (ObjectId), convert to integer
+      if (typeof response.taskId === 'string') {
+        return parseInt(response.taskId.slice(-8), 16);
+      }
+      return response.taskId;
+    }
+  },
 
   // Query resolvers
   Query: {
@@ -44,24 +65,30 @@ const resolvers = {
     user: async (_, { id }, context) => {
       // Authenticate user
       checkAuth(context);
-      // Return the user with the specified ID
-      return await User.findById(id);
+      // Find user by userId (integer) field, not ObjectId
+      return await User.findOne({ userId: parseInt(id) });
     },
     
     // Get all tasks (user-specific, like REST API) with pagination
     tasks: async (_, __, context) => {
       // Authenticate user
       const user = checkAuth(context);
-      // Get tasks for the authenticated user only
+      // Get tasks for the authenticated user only using ObjectId
       const tasks = await Task.find({ userId: user.id });
 
-      // Transform tasks to match REST API format
+      // Transform tasks to match REST API format exactly
       const transformedTasks = tasks.map(task => ({
-        id: task._id.toString(),
+        id: Math.abs(task._id.toString().slice(-8).split('').reduce((a, b) => {
+          a = ((a << 5) - a) + b.charCodeAt(0);
+          return a & a;
+        }, 0)),
         title: task.title,
         description: task.description,
         status: task.status,
-        user_id: task.userId.toString(),
+        user_id: user.userId || Math.abs(user._id.toString().slice(-8).split('').reduce((a, b) => {
+          a = ((a << 5) - a) + b.charCodeAt(0);
+          return a & a;
+        }, 0)),
         createdAt: task.createdAt,
         updatedAt: task.updatedAt
       }));
@@ -73,7 +100,7 @@ const resolvers = {
         total: transformedTasks.length,
         tasks: transformedTasks
       };
-    }
+    },
   },
 
   // Mutation resolvers
@@ -177,8 +204,7 @@ const resolvers = {
       return {
         success: true,
         message: "Task created successfully",
-        taskId: task._id.toString(),
-        id: task._id.toString(),
+        taskId: task._id.toString(), // Use MongoDB ObjectId as string to match GraphQL conventions
         title: task.title,
         description: task.description,
         status: task.status

@@ -1,8 +1,13 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const { getNextSequence } = require('../utils/counter');
 
 const userSchema = new mongoose.Schema(
   {
+    userId: {
+      type: Number,
+      unique: true
+    },
     username: {
       type: String,
       required: true,
@@ -33,11 +38,25 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
+// Auto-increment userId before saving
+userSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    try {
+      this.userId = await getNextSequence('userId');
+    } catch (error) {
+      return next(error);
+    }
   }
+  
+  // Hash password if it's modified
+  if (this.isModified('password')) {
+    try {
+      this.password = await bcrypt.hash(this.password, 10);
+    } catch (error) {
+      return next(error);
+    }
+  }
+  
   next();
 });
 

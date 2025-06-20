@@ -151,16 +151,17 @@ describe('Basic API Equivalence Tests', () => {
       expect(graphqlTask.status).toBe(taskData.status);
 
       // Track task for cleanup
-      if (graphqlTask.id) {
+      const graphqlTaskId = graphqlTask.taskId || graphqlTask.id;
+      if (graphqlTaskId) {
         testData.graphqlTasks.push({ 
-          id: graphqlTask.id, 
+          id: graphqlTaskId, 
           title: taskData.title 
         });
       }
 
       // Both should create tasks successfully
       expect(restTask.success || restTask.id || restTask.taskId).toBeTruthy();
-      expect(graphqlTask.id).toBeDefined();
+      expect(graphqlTask.taskId || graphqlTask.id).toBeDefined();
     });
 
     test('Task retrieval should work in both APIs', async () => {

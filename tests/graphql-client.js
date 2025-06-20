@@ -175,11 +175,7 @@ const graphqlAPI = {
     const result = await graphqlRequest(mutation, { input: taskData }, token);
     console.log('GraphQL createTask:', JSON.stringify(result.createTask, null, 2));
     
-    // Add id field for compatibility with test expectations
-    if (result.createTask && result.createTask.taskId) {
-      result.createTask.id = result.createTask.taskId;
-    }
-    
+    // Return only the fields that REST API returns - no extra id field
     return result.createTask;
   },
 
